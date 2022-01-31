@@ -31,6 +31,7 @@ def test_eda(perform_eda):
 	'''
 	test perform eda function
 	'''
+	df = churn.import_data("./data/bank_data.csv")
 	try:
 		perform_eda(df)
 		logging.info("Testing perform_eda: SUCCESS")
@@ -57,15 +58,58 @@ def test_eda(perform_eda):
 
 
 def test_encoder_helper(encoder_helper):
-	'''
+	"""
 	test encoder helper
-	'''
+	"""
+	try:
+		encoder_helper(df, category_lst)
+		logging.info("Testing encoder_helper: SUCCESS")
+	except TypeError as err:
+		logging.error("Testing encoder_helper: Input data is not a pandas dataframe")
+		raise err
+	try:
+		'Attrition_Flag' in df.columns
+		logging.info("Testing encoder_helper: SUCCESS")
+	except KeyError as err:
+		logging.error("Testing encoder_helper: Churn flag is not found")
+		raise err
+	try:
+		set(category_lst).intersection(set(df.columns)) == len(category_lst)
+		logging.info("Testing encoder_helper: SUCCESS")
+	except KeyError as err:
+		logging.error("Testing encoder_helper: Not all X variable columns found")
+		raise err
 
 
 def test_perform_feature_engineering(perform_feature_engineering):
 	'''
 	test perform_feature_engineering
 	'''
+	try:
+		perform_feature_engineering(df)
+		logging.info("Testing perform_feature_engineering: SUCCESS")
+	except TypeError as err:
+		logging.error("Testing perform_feature_engineering: Input data is not a pandas dataframe")
+		raise err
+	try:
+		'Churn' in df.columns
+		logging.info("Testing perform_feature_engineering: SUCCESS")
+	except KeyError as err:
+		logging.error("Testing perform_feature_engineering: Churn flag is not found")
+		raise err
+	try:
+		keep_cols = ['Customer_Age', 'Dependent_count', 'Months_on_book',
+					 'Total_Relationship_Count', 'Months_Inactive_12_mon',
+					 'Contacts_Count_12_mon', 'Credit_Limit', 'Total_Revolving_Bal',
+					 'Avg_Open_To_Buy', 'Total_Amt_Chng_Q4_Q1', 'Total_Trans_Amt',
+					 'Total_Trans_Ct', 'Total_Ct_Chng_Q4_Q1', 'Avg_Utilization_Ratio',
+					 'Gender_Churn', 'Education_Level_Churn', 'Marital_Status_Churn',
+					 'Income_Category_Churn', 'Card_Category_Churn']
+		set(keep_cols).intersection(set(df.columns)) == len(category_lst)
+		logging.info("Testing perform_feature_engineering: SUCCESS")
+	except KeyError as err:
+		logging.error("Testing perform_feature_engineering: Not all X variables found in dataframe")
+		raise err
 
 
 def test_train_models(train_models):
@@ -73,8 +117,17 @@ def test_train_models(train_models):
 	test train_models
 	'''
 
-
 if __name__ == "__main__":
 	test_import(churn.import_data)
-	df = churn.import_data("./data/bank_data.csv")
 	test_eda(churn.perform_eda)
+	category_lst = [
+			'Gender',
+			'Education_Level',
+			'Marital_Status',
+			'Income_Category',
+			'Card_Category'
+		]
+	test_encoder_helper(churn.encoder_helper)
+	test_perform_feature_engineering(churn.perform_feature_engineering)
+
+

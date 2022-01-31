@@ -5,9 +5,11 @@ Import necessary libraries to creates functions for churn model
 import pandas as pd
 import dataframe_image as dfi
 from matplotlib import pyplot as plt
+from sklearn.model_selection import train_test_split
 import sys
 from pylab import *
 import seaborn as sns; sns.set()
+
 
 def import_data(pth):
     '''
@@ -98,7 +100,7 @@ def perform_eda(df):
     fig.savefig('./images/eda/X_variable_heatmap.png')
 
 
-def encoder_helper(df, category_lst, response):
+def encoder_helper(df, category_lst):
     '''
     helper function to turn each categorical column into a new column with
     proportion of churn for each category - associated with cell 15 from the notebook
@@ -111,21 +113,59 @@ def encoder_helper(df, category_lst, response):
     output:
             df: pandas dataframe with new columns for
     '''
-    pass
+
+    # churn converted from Attrition_Flag feature
+    df['Churn'] = df['Attrition_Flag'].apply(lambda val: 0 if val == "Existing Customer" else 1)
+
+    # gender encoded column
+    for cat in category_lst:
+        groups = df.groupby(cat).Churn.mean()
+        df[cat + '_Churn'] = [groups.loc[val] for val in df[cat]]
+
+    return df
 
 
-def perform_feature_engineering(df, response):
+def perform_feature_engineering(df):
     '''
     input:
               df: pandas dataframe
-              response: string of response name [optional argument that could be used for naming variables or index y column]
-
     output:
               X_train: X training data
               X_test: X testing data
               y_train: y training data
               y_test: y testing data
     '''
+
+    y = df['Churn']
+    X = pd.DataFrame()
+
+    keep_cols = ['Customer_Age', 'Dependent_count', 'Months_on_book',
+                 'Total_Relationship_Count', 'Months_Inactive_12_mon',
+                 'Contacts_Count_12_mon', 'Credit_Limit', 'Total_Revolving_Bal',
+                 'Avg_Open_To_Buy', 'Total_Amt_Chng_Q4_Q1', 'Total_Trans_Amt',
+                 'Total_Trans_Ct', 'Total_Ct_Chng_Q4_Q1', 'Avg_Utilization_Ratio',
+                 'Gender_Churn', 'Education_Level_Churn', 'Marital_Status_Churn',
+                 'Income_Category_Churn', 'Card_Category_Churn']
+
+    X[keep_cols] = df[keep_cols]
+
+    # train test split
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+    return  X_train, X_test, y_train, y_test
+
+def train_models(X_train, X_test, y_train, y_test):
+    '''
+    train, store model results: images + scores, and store models
+    input:
+              X_train: X training data
+              X_test: X testing data
+              y_train: y training data
+              y_test: y testing data
+    output:
+              None
+    '''
+    pass
 
 def classification_report_image(y_train,
                                 y_test,
@@ -163,15 +203,3 @@ def feature_importance_plot(model, X_data, output_pth):
     '''
     pass
 
-def train_models(X_train, X_test, y_train, y_test):
-    '''
-    train, store model results: images + scores, and store models
-    input:
-              X_train: X training data
-              X_test: X testing data
-              y_train: y training data
-              y_test: y testing data
-    output:
-              None
-    '''
-    pass
